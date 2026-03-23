@@ -455,6 +455,11 @@ function selectRole(role) {
   document.querySelector(`[data-role="${role}"]`).classList.add('active');
 }
 
+// Authorized teachers database
+const authorizedTeachers = [
+  { name: 'نوره المالكي', email: '', subject: 'فيزياء' }
+];
+
 function handleLogin(e) {
   e.preventDefault();
   userName = document.getElementById('login-name').value.trim();
@@ -462,8 +467,13 @@ function handleLogin(e) {
   if (!userName || !userEmail) return;
   
   if (currentRole === 'teacher') {
-    // أي معلمة يمكنها الدخول - بدون قيود
-    document.getElementById('dash-teacher-name').textContent = `مرحباً ${userName} 👩‍🏫`;
+    // Check if teacher is authorized
+    const authorizedTeacher = authorizedTeachers.find(t => t.name === userName);
+    if (!authorizedTeacher) {
+      alert('عذراً، أنتِ غير مصرح لك بالدخول. تواصلي مع الإدارة.');
+      return;
+    }
+    document.getElementById('dash-teacher-name').textContent = `مرحباً ${userName} 👩‍🏫 | ${authorizedTeacher.subject}`;
     showScreen('screen-dashboard');
   } else {
     startQuiz();
@@ -688,23 +698,29 @@ async function showResults() {
   const topicPerformanceStr = JSON.stringify(topicStats);
   const answersDetailStr = JSON.stringify(answers.map(a => ({ q: a.question.q, selected: a.selected, correct: a.correct })));
   
+  // Get teacher name for this student (first authorized teacher by default)
+  const teacherName = authorizedTeachers.length > 0 ? authorizedTeachers[0].name : 'بدون معلمة';
+  
   const recordToSave = {
     student_name: userName,
     student_email: userEmail,
+    teacher_name: teacherName,
     quiz_score: score,
     total_questions: total,
     xp_earned: xp,
     accuracy_percentage: pct,
     topic_performance: topicPerformanceStr,
     completion_date: new Date().toISOString(),
-    time_spent: 0, // could track actual time
+    time_spent: 0,
     answers_detail: answersDetailStr
   };
 
   if (window.dataSdk) {
     const createResult = await window.dataSdk.create(recordToSave);
-    if (createResult.isError) {
-      console.error('Failed to save quiz result:', createResult.error);
+    if (createResult.isOk) {
+      console.log('✅ تم حفظ النتائج في قاعدة البيانات');
+    } else if (createResult.isError) {
+      console.error('❌ خطأ في حفظ البيانات:', createResult.error);
     }
   }
 
@@ -863,5 +879,5 @@ if (window.elementSdk) {
 // Init icons
 lucide.createIcons();
 </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9de9cce5b2442b24',t:'MTc3Mzg5NTI0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0df75725b2c570',t:'MTc3NDI3NDQ2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
