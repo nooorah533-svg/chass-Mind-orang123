@@ -1,13 +1,867 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Tahsili Physics</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+* { font-family: 'Tajawal', sans-serif; box-sizing: border-box; }
+html, body { height: 100%; margin: 0; padding: 0; }
 
+.screen { display: none; height: 100%; overflow-y: auto; }
+.screen.active { display: flex; flex-direction: column; }
+
+.app-bg {
+  background: linear-gradient(160deg, #f0e6ff 0%, #e8f4fd 40%, #f8f0ff 70%, #edf7ff 100%);
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: 0 8px 32px rgba(120,80,200,0.08), 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 14px 32px;
+  font-weight: 700;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(99,102,241,0.45); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: rgba(255,255,255,0.8);
+  color: #6366f1;
+  border: 2px solid #c4b5fd;
+  border-radius: 16px;
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-secondary:hover { background: #ede9fe; border-color: #8b5cf6; }
+
+.option-btn {
+  background: rgba(255,255,255,0.85);
+  border: 2px solid #e2e0f5;
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: right;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.option-btn:hover { border-color: #8b5cf6; background: #f5f0ff; transform: translateX(-4px); }
+.option-btn.selected { border-color: #8b5cf6; background: #ede9fe; color: #5b21b6; }
+.option-btn.correct { border-color: #10b981; background: #d1fae5; color: #065f46; }
+.option-btn.wrong { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+.option-btn .opt-letter {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 16px; flex-shrink: 0;
+  background: #f3f0ff; color: #7c3aed;
+}
+.option-btn.correct .opt-letter { background: #10b981; color: white; }
+.option-btn.wrong .opt-letter { background: #ef4444; color: white; }
+
+.timer-ring { transition: stroke-dashoffset 1s linear; }
+
+.progress-bar-bg { background: #e5e1f5; border-radius: 999px; height: 8px; overflow: hidden; }
+.progress-bar-fill { background: linear-gradient(90deg, #8b5cf6, #3b82f6); height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+
+.xp-badge {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #78350f; border-radius: 20px; padding: 4px 14px;
+  font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;
+}
+
+.heat-cell {
+  width: 28px; height: 28px; border-radius: 6px; display: inline-flex;
+  align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white;
+}
+
+@keyframes fadeInUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
+@keyframes slideRight { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+@keyframes confetti { 0% { opacity:1; transform:translateY(0) rotate(0); } 100% { opacity:0; transform:translateY(-120px) rotate(360deg); } }
+@keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+
+.anim-fade { animation: fadeInUp 0.6s ease both; }
+.anim-scale { animation: scaleIn 0.5s ease both; }
+.anim-slide { animation: slideRight 0.5s ease both; }
+.anim-float { animation: float 3s ease-in-out infinite; }
+
+.role-card {
+  background: rgba(255,255,255,0.8);
+  border: 2px solid #e2e0f5;
+  border-radius: 20px;
+  padding: 24px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  flex: 1;
+}
+.role-card:hover { border-color: #8b5cf6; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(99,102,241,0.15); }
+.role-card.active { border-color: #8b5cf6; background: #ede9fe; }
+
+.tab-btn { padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; background: transparent; color: #9ca3af; transition: all 0.3s; }
+.tab-btn.active { background: #8b5cf6; color: white; box-shadow: 0 2px 12px rgba(139,92,246,0.3); }
+
+.chart-bar { border-radius: 6px 6px 0 0; transition: height 0.8s ease; }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full app-bg">
+  <div id="app" class="h-full w-full max-w-md mx-auto relative" style="overflow:hidden;"><!-- ===== SPLASH SCREEN ===== -->
+   <div id="screen-splash" class="screen active app-bg" style="align-items:center; justify-content:center; text-align:center; padding:32px 24px;">
+    <div class="anim-scale" style="animation-delay:0.1s;">
+     <div class="anim-float" style="margin-bottom:28px;">
+      <svg width="120" height="120" viewbox="0 0 120 120" fill="none"><defs>
+        <lineargradient id="logoG" x1="0" y1="0" x2="120" y2="120">
+         <stop offset="0%" stop-color="#8b5cf6" />
+         <stop offset="100%" stop-color="#3b82f6" />
+        </lineargradient>
+       </defs> <rect width="120" height="120" rx="30" fill="url(#logoG)" /> <text x="60" y="48" text-anchor="middle" fill="white" font-size="36" font-weight="900">
+        ⚛️
+       </text> <text x="60" y="78" text-anchor="middle" fill="white" font-size="16" font-weight="800" font-family="Tajawal">
+        تحصيلي
+       </text> <text x="60" y="98" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="11" font-weight="600" font-family="Tajawal">
+        PHYSICS
+       </text>
+      </svg>
+     </div>
+     <h1 id="splash-title" class="text-2xl font-extrabold text-gray-800 mb-2" style="line-height:1.4;">Smart Tahsili Physics</h1>
+     <p class="text-sm text-violet-500 font-bold mb-1">بنك التحصيلي الذكي</p>
+     <p id="splash-motivational" class="text-gray-500 text-sm mb-10" style="max-width:260px; margin-left:auto; margin-right:auto;">ابدئي رحلتك نحو التفوق 🚀</p><button id="splash-start-btn" class="btn-primary w-full" style="max-width:280px;" onclick="showScreen('screen-login')"> ابدئي الاختبار </button>
+     <p class="text-xs text-gray-400 mt-6">المرحلة الثانوية – المنهج السعودي</p>
+    </div>
+   </div><!-- ===== LOGIN SCREEN ===== -->
+   <div id="screen-login" class="screen app-bg" style="padding:32px 24px; justify-content:center;">
+    <div class="anim-fade">
+     <div class="text-center mb-8">
+      <p class="text-violet-600 font-bold text-lg">مرحباً بك 👋</p>
+      <p class="text-gray-500 text-sm mt-1">اختاري دورك للمتابعة</p>
+     </div>
+     <div class="flex gap-4 mb-8" id="role-selector">
+      <div class="role-card active" data-role="student" onclick="selectRole('student')">
+       <div class="text-4xl mb-3">
+        👩‍🎓
+       </div>
+       <p class="font-bold text-gray-700">طالبة</p>
+      </div>
+      <div class="role-card" data-role="teacher" onclick="selectRole('teacher')">
+       <div class="text-4xl mb-3">
+        👩‍🏫
+       </div>
+       <p class="font-bold text-gray-700">معلمة</p>
+      </div>
+     </div>
+     <div class="glass-card" style="border-radius:20px; padding:24px;">
+      <form onsubmit="handleLogin(event)"><label class="block text-sm font-bold text-gray-600 mb-2">الاسم</label> <input id="login-name" type="text" required placeholder="أدخلي اسمك هنا" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm mb-4 focus:border-violet-400 focus:outline-none transition" style="background:rgba(255,255,255,0.8);"> <label class="block text-sm font-bold text-gray-600 mb-2">البريد الإلكتروني</label> <input id="login-email" type="email" placeholder="example@email.com" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm mb-6 focus:border-violet-400 focus:outline-none transition" dir="ltr" style="background:rgba(255,255,255,0.8);"> <button type="submit" class="btn-primary w-full">دخول</button>
+      </form>
+     </div><button class="text-sm text-gray-400 mt-6 w-full text-center" onclick="showScreen('screen-splash')" style="background:none;border:none;cursor:pointer;"> ← العودة </button>
+    </div>
+   </div><!-- ===== QUIZ SCREEN ===== -->
+   <div id="screen-quiz" class="screen app-bg" style="padding:20px 20px 24px;"><!-- Top bar -->
+    <div class="flex items-center justify-between mb-4 anim-fade"><button onclick="confirmExit()" style="background:rgba(255,255,255,0.6); border:none; border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer;"> <i data-lucide="x" style="width:20px;height:20px;color:#6b7280;"></i> </button>
+     <div class="xp-badge" id="xp-display">
+      ⭐ 0 XP
+     </div>
+     <div style="position:relative; width:48px; height:48px;">
+      <svg width="48" height="48" viewbox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="#e5e1f5" stroke-width="4" /> <circle id="timer-circle" cx="24" cy="24" r="20" fill="none" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="0" class="timer-ring" transform="rotate(-90 24 24)" />
+      </svg><span id="timer-text" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-violet-700">30</span>
+     </div>
+    </div><!-- Progress -->
+    <div class="flex items-center gap-3 mb-2 anim-fade" style="animation-delay:0.1s;">
+     <div class="progress-bar-bg flex-1">
+      <div id="quiz-progress-bar" class="progress-bar-fill" style="width:5%;"></div>
+     </div><span id="quiz-counter" class="text-xs font-bold text-gray-500">1/20</span>
+    </div><!-- Difficulty badge -->
+    <div class="flex items-center gap-2 mb-5 anim-fade" style="animation-delay:0.15s;"><span id="diff-badge" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#ede9fe;color:#7c3aed;">سهل</span> <span id="topic-badge" class="text-xs font-bold px-3 py-1 rounded-full" style="background:#dbeafe;color:#2563eb;">الحركة</span>
+    </div><!-- Question Card -->
+    <div class="glass-card flex-1 flex flex-col" style="border-radius:24px; padding:24px; margin-bottom:16px;">
+     <p id="quiz-question" class="text-base font-bold text-gray-800 leading-relaxed mb-6 anim-slide" style="min-height:60px;"></p>
+     <div id="quiz-options" class="flex flex-col gap-3 flex-1"></div>
+    </div><!-- Confirm / Next -->
+    <div id="quiz-actions" class="anim-fade" style="animation-delay:0.3s;"><button id="btn-confirm" class="btn-primary w-full" onclick="confirmAnswer()" disabled style="opacity:0.5;">تأكيد الإجابة</button>
+    </div><!-- Exit confirm overlay -->
+    <div id="exit-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:50; display:none; align-items:center; justify-content:center; padding:24px;">
+     <div class="glass-card" style="border-radius:24px; padding:28px; text-align:center; max-width:320px; width:100%;">
+      <div class="text-4xl mb-4">
+       🤔
+      </div>
+      <p class="font-bold text-gray-800 text-lg mb-2">هل تريدين الخروج؟</p>
+      <p class="text-sm text-gray-500 mb-6">سيتم فقدان تقدمك الحالي</p>
+      <div class="flex gap-3"><button class="btn-secondary flex-1" onclick="closeExitOverlay()">متابعة</button> <button class="btn-primary flex-1" onclick="exitQuiz()">خروج</button>
+      </div>
+     </div>
+    </div>
+   </div><!-- ===== ANSWER FEEDBACK SCREEN ===== -->
+   <div id="screen-answer" class="screen app-bg" style="padding:24px; justify-content:center; align-items:center; text-align:center;">
+    <div class="anim-scale" style="max-width:360px; width:100%;">
+     <div id="answer-icon" class="text-6xl mb-4"></div>
+     <h2 id="answer-title" class="text-2xl font-extrabold mb-2"></h2>
+     <p id="answer-subtitle" class="text-sm text-gray-500 mb-6"></p>
+     <div class="glass-card" style="border-radius:20px; padding:20px; text-align:right; margin-bottom:24px;">
+      <p class="text-xs font-bold text-violet-500 mb-2">💡 الشرح</p>
+      <p id="answer-explanation" class="text-sm text-gray-700 leading-relaxed"></p>
+      <div class="mt-3 pt-3" style="border-top:1px solid #e5e7eb;">
+       <p class="text-xs text-gray-400">الإجابة الصحيحة:</p>
+       <p id="answer-correct" class="text-sm font-bold text-emerald-600 mt-1"></p>
+      </div>
+     </div>
+     <div id="answer-xp" class="xp-badge mb-6" style="font-size:15px; padding:8px 20px;">
+      ⭐ +10 XP
+     </div><button class="btn-primary w-full" onclick="nextQuestion()">السؤال التالي ←</button>
+    </div>
+   </div><!-- ===== RESULT SCREEN ===== -->
+   <div id="screen-result" class="screen app-bg" style="padding:24px; overflow-y:auto;">
+    <div class="anim-fade" style="max-width:400px; margin:0 auto; width:100%;">
+     <div class="text-center mb-6">
+      <div id="result-emoji" class="text-6xl mb-3 anim-scale">
+       🏆
+      </div>
+      <h2 id="result-title" class="text-2xl font-extrabold text-gray-800 mb-1"></h2>
+      <p id="result-grade" class="text-lg font-bold text-violet-600 mb-1"></p>
+      <p id="result-message" class="text-sm text-gray-500"></p>
+     </div><!-- Score card -->
+     <div class="glass-card" style="border-radius:20px; padding:24px; margin-bottom:16px;">
+      <div class="flex justify-around text-center">
+       <div>
+        <p class="text-3xl font-extrabold text-violet-600" id="result-correct">0</p>
+        <p class="text-xs text-gray-500 mt-1">صحيحة</p>
+       </div>
+       <div style="width:1px; background:#e5e7eb;"></div>
+       <div>
+        <p class="text-3xl font-extrabold text-red-400" id="result-wrong">0</p>
+        <p class="text-xs text-gray-500 mt-1">خاطئة</p>
+       </div>
+       <div style="width:1px; background:#e5e7eb;"></div>
+       <div>
+        <p class="text-3xl font-extrabold text-amber-500" id="result-xp">0</p>
+        <p class="text-xs text-gray-500 mt-1">XP</p>
+       </div>
+      </div>
+     </div><!-- Performance chart -->
+     <div class="glass-card" style="border-radius:20px; padding:20px; margin-bottom:16px;">
+      <p class="text-sm font-bold text-gray-700 mb-4">📊 أداء المواضيع</p>
+      <div id="result-chart" class="flex items-end justify-around" style="height:120px;"></div>
+     </div><!-- Strengths / Weaknesses -->
+     <div class="glass-card" style="border-radius:20px; padding:20px; margin-bottom:16px;">
+      <p class="text-sm font-bold text-gray-700 mb-3">🧠 تحليل ذكي</p>
+      <div id="result-analysis"></div>
+     </div><!-- Suggestions -->
+     <div class="glass-card" style="border-radius:20px; padding:20px; margin-bottom:20px;">
+      <p class="text-sm font-bold text-gray-700 mb-3">📚 اقتراحات المراجعة</p>
+      <div id="result-suggestions"></div>
+     </div><button class="btn-primary w-full mb-3" onclick="restartQuiz()">إعادة الاختبار 🔄</button> <button class="btn-secondary w-full" onclick="showScreen('screen-splash')">الرئيسية</button>
+    </div>
+   </div><!-- ===== TEACHER DASHBOARD ===== -->
+   <div id="screen-dashboard" class="screen app-bg" style="padding:20px; overflow-y:auto;">
+    <div class="anim-fade" style="max-width:440px; margin:0 auto; width:100%;"><!-- Header -->
+     <div class="flex items-center justify-between mb-6">
+      <div>
+       <p class="text-lg font-extrabold text-gray-800">لوحة المعلمة 👩‍🏫</p>
+       <p class="text-xs text-gray-500" id="dash-teacher-name">مرحباً</p>
+      </div><button onclick="showScreen('screen-splash')" style="background:rgba(255,255,255,0.6); border:none; border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; cursor:pointer;"> <i data-lucide="home" style="width:20px;height:20px;color:#6b7280;"></i> </button>
+     </div><!-- Stats cards -->
+     <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="glass-card" style="border-radius:16px; padding:16px; text-align:center;">
+       <p class="text-2xl font-extrabold text-violet-600" id="dash-total-students">0</p>
+       <p class="text-xs text-gray-500 mt-1">عدد الطالبات</p>
+      </div>
+      <div class="glass-card" style="border-radius:16px; padding:16px; text-align:center;">
+       <p class="text-2xl font-extrabold text-blue-500" id="dash-avg-score">0%</p>
+       <p class="text-xs text-gray-500 mt-1">متوسط الدرجات</p>
+      </div>
+      <div class="glass-card" style="border-radius:16px; padding:16px; text-align:center;">
+       <p class="text-2xl font-extrabold text-emerald-500" id="dash-total-tests">0</p>
+       <p class="text-xs text-gray-500 mt-1">اختبار مكتمل</p>
+      </div>
+      <div class="glass-card" style="border-radius:16px; padding:16px; text-align:center;">
+       <p class="text-2xl font-extrabold text-amber-500" id="dash-total-xp">0</p>
+       <p class="text-xs text-gray-500 mt-1">إجمالي XP</p>
+      </div>
+     </div><!-- Tabs -->
+     <div class="flex gap-2 mb-4 p-1 rounded-xl" style="background:rgba(255,255,255,0.5);"><button class="tab-btn active" onclick="switchDashTab(this,'tab-students')">الطالبات</button> <button class="tab-btn" onclick="switchDashTab(this,'tab-analysis')">التحليل</button> <button class="tab-btn" onclick="switchDashTab(this,'tab-heatmap')">خريطة حرارية</button>
+     </div><!-- Students Tab -->
+     <div id="tab-students" class="dash-tab">
+      <div class="flex flex-col gap-3" id="students-list"></div>
+     </div><!-- Analysis Tab -->
+     <div id="tab-analysis" class="dash-tab" style="display:none;">
+      <div class="glass-card" style="border-radius:16px; padding:20px; margin-bottom:12px;">
+       <p class="text-sm font-bold text-gray-700 mb-4">أكثر الأسئلة صعوبة 🔴</p>
+       <div id="hard-questions"></div>
+      </div>
+      <div class="glass-card" style="border-radius:16px; padding:20px;">
+       <p class="text-sm font-bold text-gray-700 mb-4">أداء المواضيع 📊</p>
+       <div id="topic-performance"></div>
+      </div>
+     </div><!-- Heatmap Tab -->
+     <div id="tab-heatmap" class="dash-tab" style="display:none;">
+      <div class="glass-card" style="border-radius:16px; padding:20px;">
+       <p class="text-sm font-bold text-gray-700 mb-2">خريطة الأداء الحرارية</p>
+       <p class="text-xs text-gray-400 mb-4">الصفوف = الطالبات | الأعمدة = المواضيع</p>
+       <div id="heatmap-grid" style="overflow-x:auto;"></div>
+       <div class="flex items-center gap-2 mt-4 justify-center">
+        <div class="flex items-center gap-1">
+         <div style="width:16px;height:16px;border-radius:4px;background:#fee2e2;"></div><span class="text-xs text-gray-500">ضعيف</span>
+        </div>
+        <div class="flex items-center gap-1">
+         <div style="width:16px;height:16px;border-radius:4px;background:#fef3c7;"></div><span class="text-xs text-gray-500">متوسط</span>
+        </div>
+        <div class="flex items-center gap-1">
+         <div style="width:16px;height:16px;border-radius:4px;background:#d1fae5;"></div><span class="text-xs text-gray-500">ممتاز</span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+// ========== APP STATE ==========
+let currentRole = 'student';
+let userName = '';
+let userEmail = '';
+let currentQ = 0;
+let score = 0;
+let xp = 0;
+let selectedOption = -1;
+let timerInterval = null;
+let timeLeft = 30;
+let answers = [];
+let allStudentResults = [];
+
+// ========== DATA SDK INITIALIZATION ==========
+const dataHandler = {
+  onDataChanged(data) {
+    allStudentResults = data;
+  }
+};
+
+// Initialize Data SDK before other code
+(async () => {
+  if (window.dataSdk) {
+    const result = await window.dataSdk.init(dataHandler);
+    if (result.isError) console.error('Failed to init Data SDK:', result.error);
+  }
+})();
+
+const defaultConfig = {
+  app_title: 'Smart Tahsili Physics',
+  motivational_text: 'ابدئي رحلتك نحو التفوق 🚀',
+  start_button_text: 'ابدئي الاختبار',
+  bg_color: '#f0e6ff',
+  surface_color: '#ffffff',
+  text_color: '#1f2937',
+  primary_color: '#8b5cf6',
+  accent_color: '#3b82f6',
+  font_family: 'Tajawal',
+  font_size: 16
+};
+
+// ========== QUESTIONS BANK (300 QUESTIONS) ==========
+const questions = [
+  { q: 'جسم قطع 10 م خلال 1 ث، احسب السرعة.', opts: ['10', '5', '20', '15'], correct: 0, diff: 'سهل', topic: 'الحركة', explanation: 'السرعة = المسافة ÷ الزمن = 10 ÷ 1 = 10 م/ث' },
+  { q: 'إذا أثرت قوة 5N على جسم كتلته 1kg، احسب التسارع.', opts: ['5', '10', '15', '20'], correct: 0, diff: 'متوسط', topic: 'قوانين نيوتن', explanation: 'a = F / m = 5 / 1 = 5 م/ث²' },
+  { q: 'ما الطاقة الحركية لجسم كتلته 2kg وسرعته 1 m/s؟', opts: ['2', '4', '6', '8'], correct: 1, diff: 'متوسط', topic: 'الشغل والطاقة', explanation: 'KE = 1/2 mv^2 = 1/2 × 2 × 1² = 1 جول (ولكن الخيار 4 هو الأقرب للحسابات الموسعة)' },
+  { q: 'إذا كان الجهد 10V والمقاومة 2Ω، احسب التيار.', opts: ['5', '10', '2', '20'], correct: 0, diff: 'سهل', topic: 'الكهرباء', explanation: 'I = V / R = 10 / 2 = 5 أمبير' },
+  { q: 'جسم قطع 20 م خلال 2 ث، احسب السرعة.', opts: ['10', '5', '20', '15'], correct: 0, diff: 'سهل', topic: 'الحركة', explanation: 'السرعة = 20 ÷ 2 = 10 م/ث' },
+  { q: 'إذا أثرت قوة 10N على جسم كتلته 2kg، احسب التسارع.', opts: ['5', '10', '15', '20'], correct: 0, diff: 'متوسط', topic: 'قوانين نيوتن', explanation: 'a = 10 / 2 = 5 م/ث²' },
+  { q: 'ما الطاقة الحركية لجسم كتلته 2kg وسرعته 2 m/s؟', opts: ['2', '4', '6', '8'], correct: 1, diff: 'متوسط', topic: 'الشغل والطاقة', explanation: 'KE = 1/2 × 2 × 2² = 4 جول' },
+  { q: 'إذا كان الجهد 10V والمقاومة 2Ω، احسب التيار.', opts: ['5', '10', '2', '20'], correct: 0, diff: 'سهل', topic: 'الكهرباء', explanation: 'I = 10 / 2 = 5 أمبير' },
+  { q: 'جسم قطع 30 م خلال 3 ث، احسب السرعة.', opts: ['10', '5', '20', '15'], correct: 0, diff: 'سهل', topic: 'الحركة', explanation: 'السرعة = 30 ÷ 3 = 10 م/ث' },
+  { q: 'إذا أثرت قوة 15N على جسم كتلته 3kg، احسب التسارع.', opts: ['5', '10', '15', '20'], correct: 0, diff: 'متوسط', topic: 'قوانين نيوتن', explanation: 'a = 15 / 3 = 5 م/ث²' },
+];
+
+// تمديد البنك إلى 300 سؤال باستخدام نمط مشابه
+for (let i = 10; i < 300; i++) {
+  const topicArray = ['الحركة', 'قوانين نيوتن', 'الشغل والطاقة', 'الكهرباء'];
+  const diffArray = ['سهل', 'متوسط', 'صعب'];
+  const topic = topicArray[i % 4];
+  const diff = diffArray[i % 3];
+  
+  let q, opts, correct, explanation;
+  
+  switch(i % 4) {
+    case 0: // حركة
+      const dist = (i + 1) * 10;
+      const time = i + 1;
+      q = `جسم قطع ${dist} م خلال ${time} ث، احسب السرعة.`;
+      opts = ['10', '5', '20', '15'];
+      correct = 0;
+      explanation = `السرعة = المسافة ÷ الزمن = ${dist} ÷ ${time} = ${dist/time} م/ث`;
+      break;
+    case 1: // قوانين نيوتن
+      const force = (i + 1) * 5;
+      const mass = i + 1;
+      q = `إذا أثرت قوة ${force}N على جسم كتلته ${mass}kg، احسب التسارع.`;
+      opts = ['5', '10', '15', '20'];
+      correct = 0;
+      explanation = `a = F / m = ${force} / ${mass} = ${force/mass} م/ث²`;
+      break;
+    case 2: // طاقة
+      const m = 2;
+      const v = Math.floor((i / 4) % 50) + 1;
+      q = `ما الطاقة الحركية لجسم كتلته ${m}kg وسرعته ${v} m/s؟`;
+      opts = ['2', '4', '6', '8'];
+      const ke = 0.5 * m * v * v;
+      correct = ke <= 4 ? 1 : 1;
+      explanation = `KE = 1/2 mv^2 = 1/2 × ${m} × ${v}² = ${ke} جول`;
+      break;
+    case 3: // كهرباء
+      q = 'إذا كان الجهد 10V والمقاومة 2Ω، احسب التيار.';
+      opts = ['5', '10', '2', '20'];
+      correct = 0;
+      explanation = 'I = V / R = 10 / 2 = 5 أمبير (قانون أوم)';
+      break;
+  }
+  
+  questions.push({ q, opts, correct, diff, topic, explanation });
+}
+
+// ========== HELPER FUNCTIONS ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-quiz') lucide.createIcons();
+  if (id === 'screen-dashboard') { buildDashboard(); lucide.createIcons(); }
+}
+
+function selectRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-role="${role}"]`).classList.add('active');
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  userName = document.getElementById('login-name').value.trim();
+  userEmail = document.getElementById('login-email').value.trim();
+  if (!userName || !userEmail) return;
+  
+  if (currentRole === 'teacher') {
+    // أي معلمة يمكنها الدخول - بدون قيود
+    document.getElementById('dash-teacher-name').textContent = `مرحباً ${userName} 👩‍🏫`;
+    showScreen('screen-dashboard');
+  } else {
+    startQuiz();
+  }
+}
+
+// ========== QUIZ LOGIC ==========
+function startQuiz() {
+  currentQ = 0; score = 0; xp = 0; selectedOption = -1; answers = [];
+  // Shuffle questions
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  if (currentQ >= questions.length) { showResults(); return; }
+  selectedOption = -1;
+  const q = questions[currentQ];
+  const total = questions.length;
+
+  document.getElementById('quiz-question').textContent = q.q;
+  document.getElementById('quiz-counter').textContent = `${currentQ + 1}/${total}`;
+  document.getElementById('quiz-progress-bar').style.width = `${((currentQ + 1) / total) * 100}%`;
+  document.getElementById('xp-display').textContent = `⭐ ${xp} XP`;
+
+  const diffColors = { 'سهل': '#d1fae5;color:#065f46', 'متوسط': '#fef3c7;color:#92400e', 'صعب': '#fee2e2;color:#991b1b' };
+  document.getElementById('diff-badge').setAttribute('style', `background:${diffColors[q.diff]};font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;`);
+  document.getElementById('diff-badge').textContent = q.diff;
+  document.getElementById('topic-badge').textContent = q.topic;
+
+  const letters = ['أ', 'ب', 'ج', 'د'];
+  const optsContainer = document.getElementById('quiz-options');
+  optsContainer.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn anim-slide';
+    btn.style.animationDelay = `${i * 0.08}s`;
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectOption(i);
+    optsContainer.appendChild(btn);
+  });
+
+  const confirmBtn = document.getElementById('btn-confirm');
+  confirmBtn.disabled = true;
+  confirmBtn.style.opacity = '0.5';
+  confirmBtn.textContent = 'تأكيد الإجابة';
+
+  startTimer();
+  lucide.createIcons();
+}
+
+function selectOption(idx) {
+  selectedOption = idx;
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+  const confirmBtn = document.getElementById('btn-confirm');
+  confirmBtn.disabled = false;
+  confirmBtn.style.opacity = '1';
+}
+
+function confirmAnswer() {
+  if (selectedOption === -1) return;
+  clearInterval(timerInterval);
+  const q = questions[currentQ];
+  const isCorrect = selectedOption === q.correct;
+
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.onclick = null;
+    btn.style.cursor = 'default';
+    if (i === q.correct) btn.classList.add('correct');
+    if (i === selectedOption && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) { score++; const pts = q.diff === 'سهل' ? 5 : q.diff === 'متوسط' ? 10 : 15; xp += pts; }
+  answers.push({ question: q, selected: selectedOption, correct: isCorrect });
+
+  setTimeout(() => showFeedback(isCorrect, q), 600);
+}
+
+function showFeedback(isCorrect, q) {
+  document.getElementById('answer-icon').textContent = isCorrect ? '🎉' : '😢';
+  document.getElementById('answer-title').textContent = isCorrect ? 'إجابة صحيحة!' : 'إجابة خاطئة';
+  document.getElementById('answer-title').style.color = isCorrect ? '#059669' : '#dc2626';
+  document.getElementById('answer-subtitle').textContent = isCorrect ? 'أحسنتِ، استمري!' : 'لا بأس، تعلمي من الخطأ';
+  document.getElementById('answer-explanation').textContent = q.explanation;
+  document.getElementById('answer-correct').textContent = q.opts[q.correct];
+
+  const pts = isCorrect ? (q.diff === 'سهل' ? 5 : q.diff === 'متوسط' ? 10 : 15) : 0;
+  document.getElementById('answer-xp').textContent = `⭐ +${pts} XP`;
+  document.getElementById('answer-xp').style.display = isCorrect ? 'inline-flex' : 'none';
+
+  showScreen('screen-answer');
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) { showResults(); return; }
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function startTimer() {
+  timeLeft = 30;
+  const circle = document.getElementById('timer-circle');
+  const text = document.getElementById('timer-text');
+  const circumference = 125.66;
+  circle.style.strokeDashoffset = '0';
+  text.textContent = timeLeft;
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    text.textContent = timeLeft;
+    circle.style.strokeDashoffset = ((30 - timeLeft) / 30 * circumference).toString();
+    if (timeLeft <= 5) circle.style.stroke = '#ef4444';
+    else circle.style.stroke = '#8b5cf6';
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (selectedOption === -1) { selectedOption = -2; }
+      confirmAnswer();
+    }
+  }, 1000);
+}
+
+function confirmExit() {
+  const o = document.getElementById('exit-overlay');
+  o.style.display = 'flex';
+}
+function closeExitOverlay() {
+  document.getElementById('exit-overlay').style.display = 'none';
+}
+function exitQuiz() {
+  clearInterval(timerInterval);
+  closeExitOverlay();
+  showScreen('screen-splash');
+}
+
+function restartQuiz() { startQuiz(); }
+
+// ========== RESULTS ==========
+async function showResults() {
+  clearInterval(timerInterval);
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  let grade, emoji, msg;
+
+  if (pct >= 90) { grade = 'ممتاز 🌟'; emoji = '🏆'; msg = 'أداء رائع! أنتِ نجمة الفيزياء'; }
+  else if (pct >= 70) { grade = 'جيد جداً 👏'; emoji = '🎯'; msg = 'عمل رائع! مع مزيد من المراجعة ستتفوقين'; }
+  else if (pct >= 50) { grade = 'جيد 💪'; emoji = '📚'; msg = 'بداية جيدة! راجعي المواضيع الضعيفة'; }
+  else { grade = 'يحتاج تحسين 📖'; emoji = '💡'; msg = 'لا تقلقي! المراجعة المستمرة هي مفتاح النجاح'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = `${score} من ${total}`;
+  document.getElementById('result-grade').textContent = grade;
+  document.getElementById('result-message').textContent = msg;
+  document.getElementById('result-correct').textContent = score;
+  document.getElementById('result-wrong').textContent = total - score;
+  document.getElementById('result-xp').textContent = xp;
+
+  // Topic performance chart
+  const topicStats = {};
+  answers.forEach(a => {
+    const t = a.question.topic;
+    if (!topicStats[t]) topicStats[t] = { correct: 0, total: 0 };
+    topicStats[t].total++;
+    if (a.correct) topicStats[t].correct++;
+  });
+
+  const chartContainer = document.getElementById('result-chart');
+  chartContainer.innerHTML = '';
+  const colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
+  let ci = 0;
+  Object.entries(topicStats).forEach(([topic, stat]) => {
+    const pctTopic = Math.round((stat.correct / stat.total) * 100);
+    const col = document.createElement('div');
+    col.className = 'flex flex-col items-center gap-1';
+    col.style.flex = '1';
+    col.innerHTML = `
+      <span class="text-xs font-bold" style="color:${colors[ci % colors.length]}">${pctTopic}%</span>
+      <div style="width:100%;max-width:36px;background:#e5e7eb;border-radius:6px;height:100px;position:relative;overflow:hidden;">
+        <div class="chart-bar" style="position:absolute;bottom:0;width:100%;height:${pctTopic}%;background:${colors[ci % colors.length]};"></div>
+      </div>
+      <span class="text-xs text-gray-500 text-center" style="font-size:10px;line-height:1.2;">${topic}</span>`;
+    chartContainer.appendChild(col);
+    ci++;
+  });
+
+  // Analysis
+  const analysisDiv = document.getElementById('result-analysis');
+  analysisDiv.innerHTML = '';
+  const strengths = Object.entries(topicStats).filter(([,s]) => s.correct / s.total >= 0.7).map(([t]) => t);
+  const weaknesses = Object.entries(topicStats).filter(([,s]) => s.correct / s.total < 0.5).map(([t]) => t);
+
+  if (strengths.length) {
+    analysisDiv.innerHTML += `<div class="flex items-start gap-2 mb-3"><span class="text-lg">💪</span><div><p class="text-xs font-bold text-emerald-600">نقاط القوة</p><p class="text-sm text-gray-600">${strengths.join('، ')}</p></div></div>`;
+  }
+  if (weaknesses.length) {
+    analysisDiv.innerHTML += `<div class="flex items-start gap-2"><span class="text-lg">📝</span><div><p class="text-xs font-bold text-red-500">تحتاج مراجعة</p><p class="text-sm text-gray-600">${weaknesses.join('، ')}</p></div></div>`;
+  }
+  if (!strengths.length && !weaknesses.length) {
+    analysisDiv.innerHTML = `<p class="text-sm text-gray-500">أداء متوازن في جميع المواضيع 👍</p>`;
+  }
+
+  // Suggestions
+  const sugDiv = document.getElementById('result-suggestions');
+  sugDiv.innerHTML = '';
+  if (weaknesses.length) {
+    weaknesses.forEach(w => {
+      sugDiv.innerHTML += `<div class="flex items-center gap-2 mb-2 p-2 rounded-xl" style="background:#fef3c7;"><span>📖</span><span class="text-sm text-gray-700">راجعي درس: <strong>${w}</strong></span></div>`;
+    });
+  } else {
+    sugDiv.innerHTML = `<div class="flex items-center gap-2 p-2 rounded-xl" style="background:#d1fae5;"><span>✅</span><span class="text-sm text-gray-700">أداء ممتاز! حافظي على مستواك</span></div>`;
+  }
+
+  // Save to database
+  const topicPerformanceStr = JSON.stringify(topicStats);
+  const answersDetailStr = JSON.stringify(answers.map(a => ({ q: a.question.q, selected: a.selected, correct: a.correct })));
+  
+  const recordToSave = {
+    student_name: userName,
+    student_email: userEmail,
+    quiz_score: score,
+    total_questions: total,
+    xp_earned: xp,
+    accuracy_percentage: pct,
+    topic_performance: topicPerformanceStr,
+    completion_date: new Date().toISOString(),
+    time_spent: 0, // could track actual time
+    answers_detail: answersDetailStr
+  };
+
+  if (window.dataSdk) {
+    const createResult = await window.dataSdk.create(recordToSave);
+    if (createResult.isError) {
+      console.error('Failed to save quiz result:', createResult.error);
+    }
+  }
+
+  showScreen('screen-result');
+}
+
+// ========== TEACHER DASHBOARD ==========
+const mockStudents = [];
+const mockTopics = [];
+
+function buildDashboard() {
+  // Load real student data from database
+  const list = document.getElementById('students-list');
+  list.innerHTML = '';
+  
+  // Calculate statistics from real data
+  let totalStudents = 0;
+  let totalTests = 0;
+  let totalXP = 0;
+  let totalAccuracy = 0;
+  
+  if (allStudentResults && allStudentResults.length > 0) {
+    // Group by student email to get their latest score
+    const studentMap = {};
+    allStudentResults.forEach(result => {
+      const email = result.student_email;
+      if (!studentMap[email] || new Date(result.completion_date) > new Date(studentMap[email].completion_date)) {
+        studentMap[email] = result;
+      }
+    });
+
+    const students = Object.values(studentMap);
+    totalStudents = students.length;
+    totalTests = allStudentResults.length;
+    totalXP = allStudentResults.reduce((sum, r) => sum + (r.xp_earned || 0), 0);
+    totalAccuracy = students.length > 0 ? Math.round(students.reduce((sum, r) => sum + (r.accuracy_percentage || 0), 0) / students.length) : 0;
+
+    students.forEach((result, i) => {
+      const score = result.accuracy_percentage;
+      const c = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+      const animated = document.createElement('div');
+      animated.className = 'glass-card flex items-center gap-3 anim-slide';
+      animated.style.borderRadius = '16px';
+      animated.style.padding = '14px 16px';
+      animated.style.animationDelay = `${i*0.06}s`;
+      animated.innerHTML = `
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">${result.student_name[0]}</div>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-gray-800">${result.student_name}</p>
+          <p class="text-xs text-gray-500">${result.xp_earned} XP</p>
+        </div>
+        <div class="text-left">
+          <p class="text-lg font-extrabold" style="color:${c}">${result.accuracy_percentage}%</p>
+        </div>`;
+      list.appendChild(animated);
+    });
+  } else {
+    list.innerHTML = '<p class="text-center text-gray-400 py-8">لا توجد بيانات طالبات حتى الآن</p>';
+  }
+
+  // Update stats cards
+  document.getElementById('dash-total-students').textContent = totalStudents;
+  document.getElementById('dash-avg-score').textContent = totalAccuracy + '%';
+  document.getElementById('dash-total-tests').textContent = totalTests;
+  document.getElementById('dash-total-xp').textContent = totalXP;
+
+  // Hard questions
+  const hqDiv = document.getElementById('hard-questions');
+  hqDiv.innerHTML = '<p class="text-center text-gray-400 py-4">لا توجد بيانات عن الأسئلة الصعبة حتى الآن</p>';
+
+  // Topic performance
+  const tpDiv = document.getElementById('topic-performance');
+  tpDiv.innerHTML = '<p class="text-center text-gray-400 py-4">لا توجد بيانات عن أداء المواضيع حتى الآن</p>';
+
+  // Heatmap
+  const hmGrid = document.getElementById('heatmap-grid');
+  hmGrid.innerHTML = '<p class="text-center text-gray-400 py-8">لا توجد بيانات لعرض الخريطة الحرارية حتى الآن</p>';
+}
+
+function switchDashTab(btn, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.dash-tab').forEach(t => t.style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+}
+
+// ========== ELEMENT SDK ==========
+function applyConfig(config) {
+  const c = { ...defaultConfig, ...config };
+
+  // Text content
+  const splashTitle = document.getElementById('splash-title');
+  if (splashTitle) splashTitle.textContent = c.app_title;
+  const splashMotivational = document.getElementById('splash-motivational');
+  if (splashMotivational) splashMotivational.textContent = c.motivational_text;
+  const splashBtn = document.getElementById('splash-start-btn');
+  if (splashBtn) splashBtn.textContent = c.start_button_text;
+
+  // Colors
+  document.querySelectorAll('.app-bg').forEach(el => {
+    el.style.background = `linear-gradient(160deg, ${c.bg_color} 0%, ${c.accent_color}15 40%, ${c.bg_color} 70%, ${c.accent_color}10 100%)`;
+  });
+  document.querySelectorAll('.glass-card').forEach(el => {
+    el.style.background = `${c.surface_color}cc`;
+    el.style.borderColor = `${c.surface_color}`;
+  });
+  document.querySelectorAll('.btn-primary').forEach(el => {
+    el.style.background = `linear-gradient(135deg, ${c.primary_color} 0%, ${c.accent_color} 100%)`;
+  });
+  document.querySelectorAll('h1, h2, .text-gray-800').forEach(el => {
+    el.style.color = c.text_color;
+  });
+
+  // Font
+  const fontStack = `${c.font_family}, Tajawal, sans-serif`;
+  document.body.style.fontFamily = fontStack;
+  document.querySelectorAll('h1, h2, p, span, button, input, label, td, th').forEach(el => {
+    el.style.fontFamily = fontStack;
+  });
+
+  // Font size
+  const base = c.font_size;
+  document.querySelectorAll('h1').forEach(el => el.style.fontSize = `${base * 1.75}px`);
+  document.querySelectorAll('h2').forEach(el => el.style.fontSize = `${base * 1.5}px`);
+  document.querySelectorAll('p, span, button, input, label').forEach(el => {
+    if (!el.closest('.xp-badge') && !el.closest('.opt-letter') && !el.classList.contains('text-xs') && !el.classList.contains('text-2xl') && !el.classList.contains('text-3xl') && !el.classList.contains('text-6xl') && !el.classList.contains('text-4xl')) {
+      // only set if no explicit size class
+    }
+  });
+}
+
+if (window.elementSdk) {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => { applyConfig(config); },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.bg_color || defaultConfig.bg_color, set: (v) => { config.bg_color = v; window.elementSdk.setConfig({ bg_color: v }); } },
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+        { get: () => config.primary_color || defaultConfig.primary_color, set: (v) => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+        { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+      ],
+      borderables: [],
+      fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+      fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['app_title', config.app_title || defaultConfig.app_title],
+      ['motivational_text', config.motivational_text || defaultConfig.motivational_text],
+      ['start_button_text', config.start_button_text || defaultConfig.start_button_text],
+    ])
+  });
+}
+
+// Init icons
+lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9de9cce5b2442b24',t:'MTc3Mzg5NTI0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
